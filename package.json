@@ -1,0 +1,10 @@
+{
+  "name": "api-data-fetcher",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "npx http-server ./frontend/public -p 8080"
+  },
+  "dependencies": {
+    "axios": "^0.24.0"
+  }
+}
