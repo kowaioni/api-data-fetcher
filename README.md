@@ -1,1 +1,1 @@
-# api-data-fetcher
+The `api-data-fetcher` project is designed to be a robust and efficient API server, leveraging the power of Rust to fetch data from external APIs upon receiving HTTP requests. Utilizing frameworks like Actix or Rocket for web server initialization, it offers well-defined routes to process these requests seamlessly. Special attention is given to error handling, ensuring that invalid URLs or unexpected responses from external APIs are managed gracefully, providing a reliable and user-friendly interface for data retrieval tasks.
