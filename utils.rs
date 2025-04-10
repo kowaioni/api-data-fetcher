@@ -1,6 +1,5 @@
-use reqwest::{Client, Error};
+use reqwest::{Client, Error, header::HeaderMap};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::env;
 use dotenv::dotenv;
 
@@ -8,39 +7,32 @@ fn init_env() {
     dotenv().ok();
 }
 
-async fn send_get_request(url: &str, headers: HashMap<&str, &str>) -> Result<String, Error> {
+async fn send_get_request(url: &str, headers: HeaderMap) -> Result<String, Error> {
     let client = Client::new();
-    let mut request = client.get(url);
+    let response = client
+        .get(url)
+        .headers(headers)
+        .send()
+        .await?;
 
-    for (key, value) in headers {
-        request = request.header(key, value);
-    }
-
-    let response = request.send().await?;
-
-    if response.status().is_success() {
-        let body = response.text().await?;
-        Ok(body)
-    } else {
-        Err(Error::from(response.error_for_status().unwrap_err()))
+    match response.error_for_status_ref() {
+        Ok(_) => Ok(response.text().await?),
+        Err(e) => Err(Error::from(e.to_owned())),
     }
 }
 
-async fn send_post_request<T: Serialize + ?Sized>(url: &str, headers: HashMap<&str, &str>, body: &T) -> Result<String, Error> {
+async fn send_post_request<T: Serialize + ?Sized>(url: &str, headers: HeaderMap, body: &T) -> Result<String, Error> {
     let client = Client::new();
-    let mut request = client.post(url);
+    let response = client
+        .post(url)
+        .headers(headers)
+        .json(body)
+        .send()
+        .await?;
 
-    for (key, value) in headers {
-        request = request.header(key, value);
-    }
-
-    let response = request.json(body).send().await?;
-
-    if response.status().is_success() {
-        let body = response.text().await?;
-        Ok(body)
-    } else {
-        Err(Error::from(response.error_for_status().unwrap_err()))
+    match response.error_for_status_ref() {
+        Ok(_) => Ok(response.text().await?),
+        Err(e) => Err(Error::from(e.to_owned())),
     }
 }
 
@@ -54,9 +46,10 @@ async fn example_usage() -> Result<(), Box<dyn std::error::Error>> {
     let api_key = env::var("API_KEY")?;
 
     let url = "https://api.example.com/data";
-    let mut headers = HashMap::new();
-    headers.insert("Authorization", &api_key);
-    headers.insert("Content-Type", "application/json");
+    
+    let mut headers = HeaderMap::new();
+    headers.insert("Authorization", api_key.parse()?);
+    headers.insert("Content-Type", "application/json".parse()?);
 
     let get_response = send_get_request(url, headers.clone()).await?;
     println!("GET Response: {}", get_response);
